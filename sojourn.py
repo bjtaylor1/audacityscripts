@@ -142,6 +142,7 @@ def do_custom_nyquist(command):
 
 current_pos = 0
 def create_standard_segment(length, carrierFrequency, tempoFrequency, wetness):
+    global current_pos
     new_pos = current_pos + length;
     do_command('Select: Track=0 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
@@ -151,8 +152,10 @@ def create_standard_segment(length, carrierFrequency, tempoFrequency, wetness):
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
     do_custom_nyquist(get_tremolo_command(tempoFrequency, wetness, 180))
     current_pos = new_pos
+    print('current_pos is now ' + str(current_pos))
     
 def create_variable_segment(length, carrierFrequency, tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd):
+    global current_pos
     new_pos = current_pos + length;
     do_command('Select: Track=0 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
@@ -162,6 +165,7 @@ def create_variable_segment(length, carrierFrequency, tempoFrequencyStart, tempo
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
     do_custom_nyquist(get_variable_tremolo_command(tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd, 180))
     current_pos = new_pos
+    print('current_pos is now ' + str(current_pos))
     
 
 def create_sojourn():
@@ -170,4 +174,5 @@ def create_sojourn():
     create_standard_segment(180, 3000, 1, 70)
     create_variable_segment(180, 3000, 1, 0.3, 70, 70)
     
+print(current_pos)
 create_sojourn()
