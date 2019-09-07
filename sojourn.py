@@ -77,26 +77,38 @@ def quick_test():
     #do_command('SetPreference: Name=GUI/Theme Value=classic Reload=1')
 
 def get_tremolo_command():
-    return '''(setq wave 0) ; sine
+    return '''$nyquist plug-in
+$version 3
+$type process
+$preview linear
+$name (_ "TremoloSpecific")
+$manpage "Tremolo"
+$debugbutton disabled
+$action (_ "Applying TremoloSpecific...")
+$release 2.3.0
+
+(setq wave 0)
 (setq lfo 1.0) 
 (setq wet 80)
 (setq phase 0)
-
-; Convert % to linear
 (setq wet (/ wet 200.0))
-
-; set tremolo waveform 
 (setq waveform (abs-env *sine-table*))
-
-;;; Generate modulation wave
 (defun mod-wave (level)
   (setq phase (- phase 90))
   (sum (- 1 level) 
     (mult level 
       (osc (hz-to-step lfo) 1.0 waveform phase))))
 
-(mult s (mod-wave wet))'''
+(mult s (mod-wave wet))
 
+
+'''
+
+def do_custom_nyquist(command):
+    f = open('C:\Program Files (x86)\Audacity\Plug-Ins\customnyquist.py', 'w+')
+    f.write(command)
+    f.close()
+    do_command('CustomNyquist:')
 
 current_pos = 0
 def create_standard_segment(length, carrierFrequency, tempoFrequency, wetness):
@@ -104,7 +116,7 @@ def create_standard_segment(length, carrierFrequency, tempoFrequency, wetness):
     do_command('Select: Track=0 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=0.8')
     
-    do_command('TremoloSpecific:')
+    do_custom_nyquist(get_tremolo_command())
     
 
 def create_sojourn():
