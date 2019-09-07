@@ -102,6 +102,38 @@ $release 2.3.0
 (mult s (mod-wave wet))
 '''.format(tempoFrequency=tempoFrequency, wetness=wetness, phase=phase)
 
+def get_variable_tremolo_command(tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd, phase):
+    return '''(setq wave 0)
+(setq phase {phase})
+(setq startf {tempoFrequencyStart})
+(setq endf {tempoFrequencyEnd})
+(setq starta {wetnessStart})
+(setq enda {wetnessEnd})
+
+; set tremolo *waveform* 
+(setq *waveform* (cond
+   ((= wave 0) ; sine
+   *sine-table*)
+   ((= wave 1) ; triangle
+   *tri-table*)
+   ((= wave 2) ; sawtooth
+   (abs-env (list (pwl 0 -1 .995  1 1 -1 1) (hz-to-step 1.0) t)))
+   ((= wave 3) ; inverse sawtooth
+   (abs-env (list (pwl 0 1 .995  -1 1 1 1) (hz-to-step 1.0) t)))
+   (t ; square
+   (abs-env (list (pwl 0 1 .495 1 .5 -1 .995 -1 1 1 1) (hz-to-step 1.0) t)))))
+
+;; Function to generate sweep tone
+(defun sweep (sf ef wf ph)
+     (mult 0.5 (sum 1.0 (fmlfo (pwlv sf 1.0 ef) *waveform* phase))))
+
+(let* ((starta (/ starta 100.0))
+   (enda (/ enda 100.0))
+   (wet (pwlv starta 1 enda))
+   (dry (sum 1 (mult wet -1))))
+   (mult s (sum dry (mult wet (sweep startf endf *waveform* phase)))))
+'''.format(tempoFrequencyStart=tempoFrequencyStart, tempoFrequencyEnd=tempoFrequencyEnd, wetnessStart=wetnessStart, wetnessEnd=wetnessEnd, phase=phase)
+
 def do_custom_nyquist(command):
     f = open('C:\Program Files (x86)\Audacity\Plug-Ins\customnyquist.ny', 'w+')
     f.write(command)
@@ -120,10 +152,22 @@ def create_standard_segment(length, carrierFrequency, tempoFrequency, wetness):
     do_custom_nyquist(get_tremolo_command(tempoFrequency, wetness, 180))
     current_pos = new_pos
     
+def create_variable_segment(length, carrierFrequency, tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd):
+    new_pos = current_pos + length;
+    do_command('Select: Track=0 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
+    do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
+    do_custom_nyquist(get_variable_tremolo_command(tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd, 0))
+    
+    do_command('Select: Track=1 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
+    do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
+    do_custom_nyquist(get_variable_tremolo_command(tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd, 180))
+    current_pos = new_pos
+    
 
 def create_sojourn():
     do_command('NewMonoTrack')
     do_command('NewMonoTrack')
     create_standard_segment(180, 3000, 1, 70)
+    create_variable_segment(180, 3000, 1, 0.3, 70, 70)
     
 create_sojourn()
