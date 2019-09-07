@@ -16,7 +16,7 @@ Requires Python 2.7 or later. Python 3 is strongly recommended.
 
 import os
 import sys
-
+import json
 
 if sys.platform == 'win32':
     print("pipe-test.py, running on windows")
@@ -141,9 +141,10 @@ def do_custom_nyquist(command):
     do_command('CustomNyquist:')
 
 current_pos = 0
+e=2.7182818284590452353602874713527
 def create_standard_segment(length, carrierFrequency, tempoFrequency, wetness):
     global current_pos
-    new_pos = current_pos + length;
+    new_pos = current_pos + length
     do_command('Select: Track=0 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
     do_custom_nyquist(get_tremolo_command(tempoFrequency, wetness, 0))
@@ -152,11 +153,10 @@ def create_standard_segment(length, carrierFrequency, tempoFrequency, wetness):
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
     do_custom_nyquist(get_tremolo_command(tempoFrequency, wetness, 180))
     current_pos = new_pos
-    print('current_pos is now ' + str(current_pos))
     
-def create_variable_segment(length, carrierFrequency, tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd):
+def create_variable_tremolo_segment(length, carrierFrequency, tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd):
     global current_pos
-    new_pos = current_pos + length;
+    new_pos = current_pos + length
     do_command('Select: Track=0 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
     do_custom_nyquist(get_variable_tremolo_command(tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd, 0))
@@ -165,14 +165,47 @@ def create_variable_segment(length, carrierFrequency, tempoFrequencyStart, tempo
     do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
     do_custom_nyquist(get_variable_tremolo_command(tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd, 180))
     current_pos = new_pos
-    print('current_pos is now ' + str(current_pos))
     
+def create_variable_carrier_segment(length, carrierFrequencyMain, carrierFrequencyStart, carrierFrequencyEnd, tempoFrequency, wetness):
+    global current_pos
+    new_pos = current_pos + length
+    do_command('NewMonoTrack')
+    do_command('Select: Start=0 Length={length}'.format(length=length))
+
+    
+    do_command('Select: Track=0 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
+    do_command('Chirp: StartFreq={carrierFrequencyStart} EndFreq={carrierFrequencyEnd} StartAmp=1 EndAmp=1'
+        .format(carrierFrequencyStart=carrierFrequencyStart, carrierFrequencyEnd=carrierFrequencyEnd))
+    do_custom_nyquist(get_tremolo_command(tempoFrequency, wetness, 0))
+    
+    do_command('Select: Track=1 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
+    do_command('Chirp: StartFreq={carrierFrequencyStart} EndFreq={carrierFrequencyEnd} StartAmp=1 EndAmp=1'
+        .format(carrierFrequencyStart=carrierFrequencyStart, carrierFrequencyEnd=carrierFrequencyEnd))
+    do_custom_nyquist(get_tremolo_command(tempoFrequency, wetness, 180))
+    new_pos = current_pos
+   
+
 
 def create_sojourn():
-    do_command('NewMonoTrack')
-    do_command('NewMonoTrack')
-    create_standard_segment(180, 3000, 1, 70)
-    create_variable_segment(180, 3000, 1, 0.3, 70, 70)
+    global sojourndata
+    with open('sojourn.json', 'r') as f:
+        sojourndata = json.load(f)
+        
+    current_track = 0
+    for carrier in sojourndata['carriers']:
+        current_pos = 0
+        do_command('NewMonoTrack')
+        print('carrier')
+        for segment in carrier['segments']:
+            new_pos = current_pos + segment['Length']
+            do_command('Select: Start={Start} End={End} Track={CurrentTrack}'.format(Start=current_pos, End=new_pos, CurrentTrack=current_track))
+            do_command('Chirp: StartFreq={StartFreq} EndFreq={EndFreq} StartAmp=1 EndAmp=1'
+                .format(StartFreq=segment['StartFreq'], EndFreq=segment['EndFreq']))
+            current_pos = new_pos
+            
+        current_track = current_track + 1
     
-print(current_pos)
+    do_command('Select: Start=0 End={End} Track=0 TrackCount={TrackCount}'.format(End=current_pos, TrackCount=current_track+1))
+    do_command('MixAndRenderToNewTrack')
+    
 create_sojourn()

@@ -1,0 +1,23 @@
+{
+    "carriers": [
+        {
+            "segments": [
+                {
+                    "StartFreq": 3000,
+                    "EndFreq": 3000,
+                    "Length": 240
+                }
+            ]
+        },
+        {
+            "segments": [
+                {
+                    "StartFreq": 3000,
+                    "EndFreq": 750,
+                    "Length": 240
+                }
+            ]
+        }
+    ]
+    
+}
