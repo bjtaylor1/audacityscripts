@@ -76,7 +76,7 @@ def quick_test():
     do_command('Help: Command="GetInfo"')
     #do_command('SetPreference: Name=GUI/Theme Value=classic Reload=1')
 
-def get_tremolo_command():
+def get_tremolo_command(tempoFrequency, wetness, phase):
     return '''$nyquist plug-in
 $version 3
 $type process
@@ -88,9 +88,9 @@ $action (_ "Applying TremoloSpecific...")
 $release 2.3.0
 
 (setq wave 0)
-(setq lfo 1.0) 
-(setq wet 80)
-(setq phase 0)
+(setq lfo {tempoFrequency}) 
+(setq wet {wetness})
+(setq phase {phase})
 (setq wet (/ wet 200.0))
 (setq waveform (abs-env *sine-table*))
 (defun mod-wave (level)
@@ -100,12 +100,10 @@ $release 2.3.0
       (osc (hz-to-step lfo) 1.0 waveform phase))))
 
 (mult s (mod-wave wet))
-
-
-'''
+'''.format(tempoFrequency=tempoFrequency, wetness=wetness, phase=phase)
 
 def do_custom_nyquist(command):
-    f = open('C:\Program Files (x86)\Audacity\Plug-Ins\customnyquist.py', 'w+')
+    f = open('C:\Program Files (x86)\Audacity\Plug-Ins\customnyquist.ny', 'w+')
     f.write(command)
     f.close()
     do_command('CustomNyquist:')
@@ -114,14 +112,18 @@ current_pos = 0
 def create_standard_segment(length, carrierFrequency, tempoFrequency, wetness):
     new_pos = current_pos + length;
     do_command('Select: Track=0 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
-    do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=0.8')
+    do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
+    do_custom_nyquist(get_tremolo_command(tempoFrequency, wetness, 0))
     
-    do_custom_nyquist(get_tremolo_command())
+    do_command('Select: Track=1 TrackCount=1 Start=' + str(current_pos) + ' End=' + str(new_pos))
+    do_command('Tone: Frequency=' + str(carrierFrequency) + ' Amplitude=1')
+    do_custom_nyquist(get_tremolo_command(tempoFrequency, wetness, 180))
+    current_pos = new_pos
     
 
 def create_sojourn():
     do_command('NewMonoTrack')
-    #do_command('NewMonoTrack')
-    create_standard_segment(180, 3000, 1, 0.2)
+    do_command('NewMonoTrack')
+    create_standard_segment(180, 3000, 1, 70)
     
 create_sojourn()
