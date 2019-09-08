@@ -17,6 +17,7 @@ Requires Python 2.7 or later. Python 3 is strongly recommended.
 import os
 import sys
 import json
+import random
 
 if sys.platform == 'win32':
     print("pipe-test.py, running on windows")
@@ -198,6 +199,16 @@ def create_sojourn():
     current_pos = 0
     for segment in sojourndata['segments']:
         new_pos = current_pos + segment['Length']
+        if 'Break' in segment: #fade out the PREVIOUS segment (don't put 'Break' on the first segment!)
+            silenceAmount = random.randrange(segment['Break']['Silence'][0], segment['Break']['Silence'][-1])
+            do_command('Select: Start={start} End={end} Track=0 TrackCount=2'
+                .format(start=current_pos - segment['Break']['FadeOut'], end=current_pos))
+            do_command('Fade Out:')
+            do_command('Select: Start={start} End={end} Track=0 TrackCount=2'
+                .format(start=current_pos, end=current_pos + silenceAmount))
+            do_command('Silence:')
+            current_pos = current_pos + silenceAmount
+           
         do_command('Select: Start={current_pos} End={new_pos} Track=0 TrackCount=1'
             .format(current_pos=current_pos, new_pos=new_pos))
         do_command('Chirp: StartFreq={StartFreq} EndFreq={EndFreq} StartAmp=1 EndAmp=1'
@@ -205,15 +216,17 @@ def create_sojourn():
         do_custom_nyquist(get_variable_tremolo_command(
             segment['Tempo'][0], segment['Tempo'][-1], segment['Wetness'][0], segment['Wetness'][-1], 0))
             
-        #do_custom_nyquist(get_tremolo_command(segment['Tempo'][0], segment['Wetness'][0], 0))
-    
         do_command('Select: Start={current_pos} End={new_pos} Track=1 TrackCount=1'
             .format(current_pos=current_pos, new_pos=new_pos))
         do_command('Chirp: StartFreq={StartFreq} EndFreq={EndFreq} StartAmp=1 EndAmp=1'
             .format(StartFreq=segment['Carrier'][0], EndFreq=segment['Carrier'][-1]))
         do_custom_nyquist(get_variable_tremolo_command(
             segment['Tempo'][0], segment['Tempo'][-1], segment['Wetness'][0], segment['Wetness'][-1], 180))
-        #do_custom_nyquist(get_tremolo_command(segment['Tempo'][0], segment['Wetness'][0], 0))
+        
+        if 'Break' in segment: #fade in the start (do this at the end as we've only now generated it)
+            do_command('Select: Start={start} End={end} Track=0 TrackCount=2'
+                .format(start=current_pos, end=current_pos + segment['Break']['FadeIn']))
+            do_command('Fade In:')            
         
         current_pos = new_pos
     

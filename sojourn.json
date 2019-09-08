@@ -1,23 +1,25 @@
 {
     "segments": [
-        {
-            "Carrier": [3000],
-            "Tempo": [1],
-            "Wetness": [80],
-            "Length": 180
-        },
-        {
-            "Carrier": [3000],
-            "Tempo": [1, 0.3],
-            "Wetness": [80],
-            "Length": 240
-        },
-        {
-            "Carrier": [3000],
-            "Tempo": [0.3, 1],
-            "Wetness": [80],
-            "Length": 240
-        }
+        { "Carrier": [3000], "Tempo": [0.8], "Wetness": [80], "Length": 180 },
+        
+        { "Carrier": [3000], "Tempo": [0.8, 0.2], "Wetness": [80], "Length": 240, "Break": { "FadeOut": 5, "Silence": [2, 20], "FadeIn": 10 }  },
+        { "Carrier": [3000], "Tempo": [0.2, 0.8], "Wetness": [80], "Length": 240 },
+        
+        { "Carrier": [3000], "Tempo": [0.8, 3], "Wetness": [80], "Length": 240},
+        { "Carrier": [3000], "Tempo": [3, 0.8], "Wetness": [80], "Length": 240 },
+        
+        { "Carrier": [3000], "Tempo": [0.8], "Wetness": [80, 20], "Length": 240, "Break": { "FadeOut": 5, "Silence": [2, 20], "FadeIn": 10 }  },
+        { "Carrier": [3000], "Tempo": [0.8], "Wetness": [20, 80], "Length": 240 },
+
+        { "Carrier": [3000], "Tempo": [0.8, 0.2], "Wetness": [80, 20], "Length": 240},
+        { "Carrier": [3000], "Tempo": [0.2, 0.8], "Wetness": [20, 80], "Length": 240},
+
+        { "Carrier": [3000, 750], "Tempo": [0.8], "Wetness": [80, 60], "Length": 180, "Break": { "FadeOut": 5, "Silence": [2, 10], "FadeIn": 5 } },
+        { "Carrier": [750, 3000], "Tempo": [0.8], "Wetness": [60, 80], "Length": 180 },
+
+        { "Carrier": [3000], "Tempo": [0.8, 3], "Wetness": [80, 50], "Length": 180, "Break": { "FadeOut": 5, "Silence": [10, 30], "FadeIn": 5 } },
+        { "Carrier": [3000], "Tempo": [3], "Wetness": [50], "Length": 120 },
+        { "Carrier": [3000], "Tempo": [3, 0.8], "Wetness": [50, 80], "Length": 180 }
     ]
     
 }
