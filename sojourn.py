@@ -103,6 +103,8 @@ $release 2.3.0
 '''.format(tempoFrequency=tempoFrequency, wetness=wetness, phase=phase)
 
 def get_variable_tremolo_command(tempoFrequencyStart, tempoFrequencyEnd, wetnessStart, wetnessEnd, phase):
+    print('get_variable_tremolo_command: tempoFrequencyStart={tempoFrequencyStart}, tempoFrequencyEnd={tempoFrequencyEnd}, wetnessStart={wetnessStart}, wetnessEnd={wetnessEnd}, phase={phase}'
+        .format(tempoFrequencyStart=tempoFrequencyStart, tempoFrequencyEnd=tempoFrequencyEnd, wetnessStart=wetnessStart, wetnessEnd=wetnessEnd, phase=phase))
     return '''(setq wave 0)
 (setq phase {phase})
 (setq startf {tempoFrequencyStart})
@@ -203,16 +205,17 @@ def create_sojourn():
         do_custom_nyquist(get_variable_tremolo_command(
             segment['Tempo'][0], segment['Tempo'][-1], segment['Wetness'][0], segment['Wetness'][-1], 0))
             
-        exit
-        do_custom_nyquist(get_tremolo_command(segment['Tempo'][0], segment['Wetness'][0], 0))
+        #do_custom_nyquist(get_tremolo_command(segment['Tempo'][0], segment['Wetness'][0], 0))
     
         do_command('Select: Start={current_pos} End={new_pos} Track=1 TrackCount=1'
             .format(current_pos=current_pos, new_pos=new_pos))
         do_command('Chirp: StartFreq={StartFreq} EndFreq={EndFreq} StartAmp=1 EndAmp=1'
             .format(StartFreq=segment['Carrier'][0], EndFreq=segment['Carrier'][-1]))
-        #do_custom_nyquist(get_variable_tremolo_command(
-        #    segment['Tempo'][0], segment['Tempo'][-1], segment['Wetness'][0], segment['Wetness'][-1], 180))
-        do_custom_nyquist(get_tremolo_command(segment['Tempo'][0], segment['Wetness'][0], 0))
+        do_custom_nyquist(get_variable_tremolo_command(
+            segment['Tempo'][0], segment['Tempo'][-1], segment['Wetness'][0], segment['Wetness'][-1], 180))
+        #do_custom_nyquist(get_tremolo_command(segment['Tempo'][0], segment['Wetness'][0], 0))
+        
+        current_pos = new_pos
     
     #do_command('MixAndRenderToNewTrack')
     
