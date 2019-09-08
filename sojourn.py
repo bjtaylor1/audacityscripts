@@ -191,21 +191,29 @@ def create_sojourn():
     with open('sojourn.json', 'r') as f:
         sojourndata = json.load(f)
         
-    current_track = 0
-    for carrier in sojourndata['carriers']:
-        current_pos = 0
-        do_command('NewMonoTrack')
-        print('carrier')
-        for segment in carrier['segments']:
-            new_pos = current_pos + segment['Length']
-            do_command('Select: Start={Start} End={End} Track={CurrentTrack}'.format(Start=current_pos, End=new_pos, CurrentTrack=current_track))
-            do_command('Chirp: StartFreq={StartFreq} EndFreq={EndFreq} StartAmp=1 EndAmp=1'
-                .format(StartFreq=segment['StartFreq'], EndFreq=segment['EndFreq']))
-            current_pos = new_pos
+    do_command('NewMonoTrack')
+    do_command('NewMonoTrack')
+    current_pos = 0
+    for segment in sojourndata['segments']:
+        new_pos = current_pos + segment['Length']
+        do_command('Select: Start={current_pos} End={new_pos} Track=0 TrackCount=1'
+            .format(current_pos=current_pos, new_pos=new_pos))
+        do_command('Chirp: StartFreq={StartFreq} EndFreq={EndFreq} StartAmp=1 EndAmp=1'
+            .format(StartFreq=segment['Carrier'][0], EndFreq=segment['Carrier'][-1]))
+        do_custom_nyquist(get_variable_tremolo_command(
+            segment['Tempo'][0], segment['Tempo'][-1], segment['Wetness'][0], segment['Wetness'][-1], 0))
             
-        current_track = current_track + 1
+        exit
+        do_custom_nyquist(get_tremolo_command(segment['Tempo'][0], segment['Wetness'][0], 0))
     
-    do_command('Select: Start=0 End={End} Track=0 TrackCount={TrackCount}'.format(End=current_pos, TrackCount=current_track+1))
-    do_command('MixAndRenderToNewTrack')
+        do_command('Select: Start={current_pos} End={new_pos} Track=1 TrackCount=1'
+            .format(current_pos=current_pos, new_pos=new_pos))
+        do_command('Chirp: StartFreq={StartFreq} EndFreq={EndFreq} StartAmp=1 EndAmp=1'
+            .format(StartFreq=segment['Carrier'][0], EndFreq=segment['Carrier'][-1]))
+        #do_custom_nyquist(get_variable_tremolo_command(
+        #    segment['Tempo'][0], segment['Tempo'][-1], segment['Wetness'][0], segment['Wetness'][-1], 180))
+        do_custom_nyquist(get_tremolo_command(segment['Tempo'][0], segment['Wetness'][0], 0))
+    
+    #do_command('MixAndRenderToNewTrack')
     
 create_sojourn()
